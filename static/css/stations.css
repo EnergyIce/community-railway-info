@@ -1044,6 +1044,9 @@
     font-size: 1.6em;
     color: #4ecdc4;
     flex-shrink: 0;
+    /* Keep invalid symbol names (rendered as plain text) from breaking the row */
+    width: 1em;
+    overflow: hidden;
 }
 
 .list-station-name-wrap {
