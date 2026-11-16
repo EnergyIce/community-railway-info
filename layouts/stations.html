@@ -57,7 +57,9 @@
     
     <div class="stations-grid" id="stationsGrid">
         {% for station in stations %}
-        <div class="station-card" data-name="{{ station.name }}" data-id="{{ station.id }}">
+        <div class="station-card" data-name="{{ station.name }}" data-id="{{ station.id }}"
+             data-lines="{{ station.lines | join(', ') }}" data-platforms="{{ station.platform_count if station.platform_count is not none else '' }}"
+             data-type="{{ station.type or '' }}" data-status="{{ station.status or '' }}">
             {% if station.image_path %}
             <img class="station-bg" src="{{ station.image_path }}" loading="lazy" alt="{{ station.name }} image">
             {% endif %}

@@ -24,19 +24,16 @@ document.addEventListener('DOMContentLoaded', function() {
             
             listItems.forEach(item => {
                 const stationName = item.dataset.name.toLowerCase();
-                const stationInfo = item.querySelector('.list-station-description')?.textContent.toLowerCase() || '';
-                
-                if (stationName.includes(searchTerm) || stationInfo.includes(searchTerm)) {
-                    item.style.display = 'flex';
-                    visibleStations++;
-                } else {
-                    item.style.display = 'none';
-                }
+                const stationInfo = (item.dataset.search || '').toLowerCase();
+                const matches = stationName.includes(searchTerm) || stationInfo.includes(searchTerm);
+
+                item.classList.toggle('is-hidden', !matches);
+                if (matches) visibleStations++;
             });
             
             // Hide/show alphabet sections based on whether they have visible items
             alphabetSections.forEach(section => {
-                const visibleItems = section.querySelectorAll('.list-station-item[style*="flex"]');
+                const visibleItems = section.querySelectorAll('.list-station-item:not(.is-hidden)');
                 if (visibleItems.length > 0 || searchTerm.length === 0) {
                     section.style.display = 'block';
                 } else {
@@ -531,6 +528,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // List View Functions
     let isListView = false;
+
+    const STATUS_INFO = {
+        open: { label: 'Operational', dot: '' },
+        closed: { label: 'Closed', dot: 'closed' },
+        maintenance: { label: 'Maintenance', dot: 'maintenance' }
+    };
+
+    const STATION_TYPE_LABELS = {
+        public: 'Train Station',
+        private: 'Private Rail',
+        metro: 'Metro Station',
+        tram: 'Tram Stop',
+        bus: 'Bus Stop'
+    };
+
+    function stationTypeLabel(type) {
+        if (!type) return 'Unknown';
+        return STATION_TYPE_LABELS[type] || (type.charAt(0).toUpperCase() + type.slice(1));
+    }
     
     function toggleListView() {
         const stationsGrid = document.getElementById('stationsGrid');
@@ -587,10 +603,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const stationData = {
                 name: stationName,
                 id: card.dataset.id,
-                altName: card.querySelector('.station-alt-name')?.textContent || '',
-                description: card.querySelector('.station-info')?.textContent || '',
-                icon: card.querySelector('.material-symbols')?.textContent || 'train',
-                status: card.querySelector('.station-status')?.innerHTML || '',
+                altName: card.querySelector('.station-alt-name')?.textContent.trim() || '',
+                description: card.querySelector('.station-info')?.textContent.trim() || '',
+                icon: card.querySelector('.material-symbols')?.textContent.trim() || 'train',
+                lines: card.dataset.lines || '',
+                platforms: card.dataset.platforms || '',
+                type: card.dataset.type || '',
+                status: card.dataset.status || '',
                 element: card
             };
             
@@ -613,26 +632,54 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const sectionHTML = `
                 <div class="alphabet-section">
-                    <div class="alphabet-header" data-letter="${letter}">
-                        ${letter === '#' ? 'Numbers & Symbols' : letter}
+                    <div class="alphabet-section-head${letter === '#' ? ' is-wide' : ''}">
+                        <div class="alphabet-header" data-letter="${letter}">
+                            ${letter === '#' ? 'Numbers & Symbols' : letter}
+                        </div>
+                        <div class="list-columns list-row-layout" aria-hidden="true">
+                            <span></span>
+                            <span>Serving Lines</span>
+                            <span class="col-center">Platform Count</span>
+                            <span class="col-center">Station Type</span>
+                            <span class="col-center">Station-ID</span>
+                            <span class="col-center">Status</span>
+                        </div>
                     </div>
                     <div class="alphabet-stations">
                         ${stations.map(station => {
                             const safeName = escapeHtml(station.name);
                             const safeAltName = escapeHtml(station.altName);
-                            const safeDescription = escapeHtml(station.description);
                             const safeIcon = escapeHtml(station.icon);
+                            const safeLines = escapeHtml(station.lines);
+                            const safeId = escapeHtml(station.id);
+                            const status = STATUS_INFO[station.status] || STATUS_INFO.maintenance;
+                            const searchText = escapeHtml(
+                                [station.altName, station.description, station.lines].join(' ')
+                            );
 
                             return `
-                            <div class="list-station-item" data-name="${safeName}" data-id="${station.id}">
-                                <div class="list-station-icon">
-                                    <span class="material-symbols">${safeIcon}</span>
+                            <div class="list-station-item list-row-layout" data-name="${safeName}" data-id="${safeId}"
+                                 data-search="${searchText}" role="button" tabindex="0">
+                                <div class="list-cell list-cell-name">
+                                    <span class="material-symbols list-station-icon">${safeIcon}</span>
+                                    <div class="list-station-name-wrap">
+                                        <div class="list-station-name" title="${safeName}">${safeName}</div>
+                                        ${station.altName ? `<div class="list-station-alt-name">${safeAltName}</div>` : ''}
+                                    </div>
                                 </div>
-                                <div class="list-station-content">
-                                    <div class="list-station-name">${safeName}</div>
-                                    ${station.altName ? `<div class="list-station-alt-name">${safeAltName}</div>` : ''}
-                                    ${station.description ? `<div class="list-station-description">${safeDescription}</div>` : ''}
-                                    <div class="list-station-status">${station.status}</div>
+                                <div class="list-cell list-cell-lines" data-label="Serving Lines" title="${safeLines}">
+                                    ${safeLines || '<span class="list-muted">—</span>'}
+                                </div>
+                                <div class="list-cell col-center" data-label="Platforms">
+                                    ${escapeHtml(station.platforms) || '<span class="list-muted">—</span>'}
+                                </div>
+                                <div class="list-cell col-center" data-label="Type">
+                                    ${escapeHtml(stationTypeLabel(station.type))}
+                                </div>
+                                <div class="list-cell col-center" data-label="Station-ID">${safeId}</div>
+                                <div class="list-cell col-center list-station-status" data-label="Status">
+                                    <span class="status-dot ${status.dot}"></span>
+                                    <span>${status.label}</span>
                                 </div>
                             </div>
                         `;
@@ -644,15 +691,21 @@ document.addEventListener('DOMContentLoaded', function() {
             alphabetContainer.insertAdjacentHTML('beforeend', sectionHTML);
         });
         
-        // Add click event listeners to list items
+        // Add click / keyboard listeners to list items
         const listItems = alphabetContainer.querySelectorAll('.list-station-item');
         listItems.forEach(item => {
-            item.addEventListener('click', function() {
-                const stationName = this.dataset.name;
-                const stationId = this.dataset.id;
-                const originalCard = stationCards.find(card => card.dataset.name === stationName);
+            const open = () => {
+                const stationId = item.dataset.id;
+                const originalCard = stationCards.find(card => card.dataset.id === stationId);
                 if (originalCard) {
-                    openStationModal(originalCard, stationName, stationId);
+                    openStationModal(originalCard, originalCard.dataset.name, stationId);
+                }
+            };
+            item.addEventListener('click', open);
+            item.addEventListener('keydown', event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    open();
                 }
             });
         });

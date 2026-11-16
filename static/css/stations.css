@@ -941,87 +941,207 @@
 .alphabet-header[data-letter="Z"]::before { content: 'Z'; }
 .alphabet-header[data-letter="#"]::before { content: '#'; }
 
-.alphabet-stations {
+/* Shared column template for the list header and rows */
+.list-row-layout {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 15px;
+    grid-template-columns:
+        minmax(180px, 2.2fr)   /* name */
+        minmax(120px, 2.4fr)   /* serving lines */
+        minmax(90px, 1fr)      /* platform count */
+        minmax(110px, 1.2fr)   /* station type */
+        minmax(80px, 0.9fr)    /* station id */
+        minmax(110px, 1.1fr);  /* status */
+    column-gap: 16px;
+    align-items: center;
+}
+
+.col-center {
+    text-align: center;
+    justify-content: center;
+}
+
+.alphabet-section-head {
+    display: grid;
+    margin-bottom: 14px;
+    border-bottom: 2px solid rgba(78, 205, 196, 0.3);
+}
+
+/* Letter badge and column labels share one line, labels aligned to the bottom */
+.alphabet-section-head > * {
+    grid-area: 1 / 1;
+}
+
+.alphabet-section-head .list-columns {
+    align-self: end;
+    pointer-events: none;
+}
+
+/* Long header text (e.g. "Numbers & Symbols") gets its own line */
+.alphabet-section-head.is-wide > .list-columns {
+    grid-area: 2 / 1;
+}
+
+.alphabet-section-head .alphabet-header {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 4px;
+}
+
+.list-columns {
+    padding: 0 20px 6px 20px;
+    font-family: "Google Sans Flex", sans-serif;
+    font-variation-settings: "wdth" 100, "GRAD" 0, "ROND" 100;
+    font-weight: 700;
+    font-size: 0.95em;
+    color: #4ecdc4;
+    white-space: nowrap;
+}
+
+.alphabet-stations {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .list-station-item {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
-    padding: 20px;
+    box-sizing: border-box;
+    padding: 8px 18px;
+    min-height: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     border: 1.5px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    gap: 15px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 }
 
-.list-station-item:hover {
+.list-station-item.is-hidden {
+    display: none;
+}
+
+.list-station-item:hover,
+.list-station-item:focus-visible {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(78, 205, 196, 0.5);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+    outline: none;
+}
+
+.list-cell {
+    min-width: 0;
+    font-size: 0.9em;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.85));
+}
+
+.list-cell-name {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .list-station-icon {
-    font-size: 2em;
+    font-size: 1.6em;
     color: #4ecdc4;
     flex-shrink: 0;
 }
 
-.list-station-content {
-    flex: 1;
+.list-station-name-wrap {
     min-width: 0;
 }
 
 .list-station-name {
     font-family: "Google Sans Flex", sans-serif;
     font-optical-sizing: auto;
-    font-weight: 700;
     font-style: normal;
     font-variation-settings:
         "wdth" 100,
         "GRAD" 0,
         "ROND" 100;
-    font-size: 1.2em;
+    font-size: 1.1em;
     font-weight: bold;
-    margin-bottom: 5px;
     color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .list-station-alt-name {
-    font-size: 0.9em;
-    opacity: 0.7;
-    margin-bottom: 8px;
+    font-size: 0.8em;
+    opacity: 0.75;
     color: #4ecdc4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.list-station-description {
-    font-size: 0.85em;
-    opacity: 0.8;
-    line-height: 1.4;
-    margin-bottom: 10px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
+.list-cell-lines {
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.list-muted {
+    opacity: 0.4;
 }
 
 .list-station-status {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.8em;
-    opacity: 0.9;
+    white-space: nowrap;
 }
 
 .list-station-status .status-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+}
+
+/* Medium screens: drop the platform & ID columns */
+@media (max-width: 1000px) {
+    .list-row-layout {
+        grid-template-columns: minmax(150px, 2fr) minmax(100px, 2fr) minmax(100px, 1.2fr) minmax(100px, 1.1fr);
+    }
+
+    .list-row-layout > :nth-child(3),
+    .list-row-layout > :nth-child(5) {
+        display: none;
+    }
+}
+
+/* Small screens: stack each row as a compact card */
+@media (max-width: 640px) {
+    .list-columns {
+        display: none;
+    }
+
+    .list-station-item.list-row-layout {
+        grid-template-columns: 1fr auto;
+        row-gap: 6px;
+        padding: 12px 14px;
+    }
+
+    .list-station-item .list-cell-name {
+        grid-column: 1 / -1;
+    }
+
+    .list-station-item .list-cell-lines {
+        grid-column: 1 / -1;
+        white-space: normal;
+    }
+
+    .list-station-item .list-cell-lines::before {
+        content: attr(data-label) ": ";
+        color: #4ecdc4;
+        font-weight: 600;
+    }
+
+    .list-station-item .col-center {
+        text-align: left;
+        justify-content: flex-start;
+        font-size: 0.8em;
+    }
 }
 
 /* Add Station Button */
@@ -1109,23 +1229,6 @@
         font-size: 1em;
     }
     
-    .alphabet-stations {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    
-    .list-station-item {
-        padding: 15px;
-        gap: 12px;
-    }
-    
-    .list-station-icon {
-        font-size: 1.5em;
-    }
-    
-    .list-station-name {
-        font-size: 1.1em;
-    }
 
     .station-modal-card {
         max-width: 95%;
