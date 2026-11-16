@@ -483,6 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 sortBtn.classList.remove('active', 'reverse');
                 sortIcon.textContent = 'sort_by_alpha';
                 sortText.textContent = 'Sort A-Z';
+                refreshListView();
                 return;
         }
         
@@ -496,6 +497,18 @@ document.addEventListener('DOMContentLoaded', function() {
         stationCards.forEach((card, index) => {
             card.style.animation = `slideInSort 0.3s ease-out ${index * 0.05}s both`;
         });
+
+        refreshListView();
+    }
+
+    // Rebuild the list view (if it is showing) so it follows the current sort order,
+    // keeping any active search filter applied.
+    function refreshListView() {
+        if (!isListView) return;
+        generateAlphabeticalList();
+        if (searchInput.value) {
+            searchInput.dispatchEvent(new Event('input'));
+        }
     }
     
     function restoreOriginalOrder() {
@@ -616,11 +629,14 @@ document.addEventListener('DOMContentLoaded', function() {
             stationsByLetter[letter].push(stationData);
         });
         
-        // Sort letters (# comes last)
+        // Z-A when the sort button is set to descending, otherwise A-Z
+        const direction = sortOrder === 'desc' ? -1 : 1;
+
+        // Sort letters (# always comes last)
         const sortedLetters = Object.keys(stationsByLetter).sort((a, b) => {
             if (a === '#') return 1;
             if (b === '#') return -1;
-            return a.localeCompare(b);
+            return direction * a.localeCompare(b);
         });
         
         // Generate HTML for each letter section
@@ -628,7 +644,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const stations = stationsByLetter[letter];
             
             // Sort stations within the letter group
-            stations.sort((a, b) => a.name.localeCompare(b.name, 'de', { numeric: true }));
+            stations.sort((a, b) => direction * a.name.localeCompare(b.name, 'de', { numeric: true }));
             
             const sectionHTML = `
                 <div class="alphabet-section">
